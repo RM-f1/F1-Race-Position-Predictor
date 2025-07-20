@@ -28,9 +28,6 @@ st.markdown(
 st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/d/d1/Red_Bull_RB16B_%282021%29.jpg", width=250)
 st.sidebar.title("🏎️ Race Inputs")
 
-# ---------- Inputs ----------
-st.sidebar.title("🏎️ Race Inputs")
-
 grid_position = st.sidebar.number_input("Grid Position", min_value=1)
 position_order = st.sidebar.number_input("Position Order (Previous)", min_value=1)
 driver_encoded = st.sidebar.number_input("Driver Code (Encoded)", min_value=0)
@@ -43,23 +40,22 @@ laps_completed = st.sidebar.number_input("Laps Completed", min_value=0)
 # ---------- Title ----------
 st.markdown("<h1 class='main-title'>F1 - Race Position Prediction</h1>", unsafe_allow_html=True)
 
+# ---------- Load Model ----------
+model = joblib.load('f1_position_model.pkl')
+
 # ---------- Prediction ----------
-input_data = [[
-    grid_position,
-    position_order,
-    driver_encoded,
-    nationality_encoded,
-    constructor_encoded,
-    points,
-    fastest_lap_rank,
-    laps_completed
-]]
-
-prediction = lr_model.predict(input_data)
-
-
 if st.sidebar.button("Predict Final Race Position"):
-    input_data = [[driver_encoded, constructor_encoded, grid_position, fastest_lap_rank]]
+    input_data = [[
+        grid_position,
+        position_order,
+        driver_encoded,
+        nationality_encoded,
+        constructor_encoded,
+        points,
+        fastest_lap_rank,
+        laps_completed
+    ]]
+    
     prediction = model.predict(input_data)
     
     st.success(f"🏁 Predicted Final Race Position: **{int(prediction[0])}**")
