@@ -55,7 +55,7 @@ input_data = [[
     laps_completed
 ]]
 
-prediction = model.predict(input_data)
+prediction = lr_model.predict(input_data)
 
 
 if st.sidebar.button("Predict Final Race Position"):
