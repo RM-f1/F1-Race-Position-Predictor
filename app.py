@@ -29,13 +29,13 @@ st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/d/d1/Red_Bull_R
 st.sidebar.title("🏎️ Race Inputs")
 
 grid_position = st.sidebar.number_input("Grid Position", min_value=1)
-position_order = st.sidebar.number_input("Position Order (Previous)", min_value=1)
 driver_encoded = st.sidebar.number_input("Driver Code (Encoded)", min_value=0)
 nationality_encoded = st.sidebar.number_input("Driver Nationality (Encoded)", min_value=0)
 constructor_encoded = st.sidebar.number_input("Constructor Code (Encoded)", min_value=0)
 points = st.sidebar.number_input("Points Scored", min_value=0)
 fastest_lap_rank = st.sidebar.number_input("Fastest Lap Rank", min_value=1)
 laps_completed = st.sidebar.number_input("Laps Completed", min_value=0)
+
 
 # ---------- Title ----------
 st.markdown("<h1 class='main-title'>F1 - Race Position Prediction</h1>", unsafe_allow_html=True)
@@ -47,7 +47,6 @@ model = joblib.load('f1_position_model.pkl')
 if st.sidebar.button("Predict Final Race Position"):
     input_data = [[
         grid_position,
-        position_order,
         driver_encoded,
         nationality_encoded,
         constructor_encoded,
