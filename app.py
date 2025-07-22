@@ -4,16 +4,15 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 
+# ---------- Page Config ----------
+st.set_page_config(page_title="F1 Race Position Predictor", layout="wide")
+
 # ---------- Background Styling ----------
 st.markdown(
     """
     <style>
     .stApp {
-        background-color: #ffc0cb; /* Baby Pink */
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
+        background-color: #FFC0CB;
         color: black;
     }
     .main-title {
@@ -23,13 +22,12 @@ st.markdown(
         font-weight: bold;
     }
     .metric-box {
-        background: rgba(255, 255, 255, 0.8);
+        background: rgba(0, 0, 0, 0.6);
         padding: 15px;
         border-radius: 10px;
         text-align: center;
         margin-bottom: 20px;
-        color: black;
-        border: 2px solid #FF69B4;
+        color: white;
     }
     </style>
     """,
@@ -39,79 +37,102 @@ st.markdown(
 # ---------- Load Model ----------
 model = joblib.load('f1_position_model.pkl')
 
-# ---------- Tabs ----------
-tab1, tab2, tab3 = st.tabs(["🏎️ Predictor", "📊 Data Overview", "ℹ️ About"])
+# ---------- Sidebar Navigation ----------
+st.sidebar.title("🏁 F1 Race Predictor")
+menu = st.sidebar.radio("Navigation", ["Dashboard", "Analysis", "Models", "Results", "About"])
 
-with tab1:
+# ---------- Dashboard ----------
+if menu == "Dashboard":
     st.markdown("<h1 class='main-title'>F1 - Race Position Predictor</h1>", unsafe_allow_html=True)
-    st.sidebar.image("https://upload.wikimedia.org/wikipedia/commons/d/d1/Red_Bull_RB16B_%282021%29.jpg", width=250)
-    st.sidebar.title("🏎️ Race Inputs")
 
-    grid_position = st.sidebar.number_input("Grid Position", min_value=1)
-    driver_encoded = st.sidebar.number_input("Driver Code (Encoded)", min_value=0)
-    nationality_encoded = st.sidebar.number_input("Driver Nationality (Encoded)", min_value=0)
-    constructorRef = st.sidebar.text_input("Constructor Reference")
+    st.sidebar.markdown("### 🏎️ Race Inputs")
+    grid = st.sidebar.number_input("Grid Position", min_value=1)
+    driver_ref = st.sidebar.number_input("Driver Code (Encoded)", min_value=0)
+    nationality = st.sidebar.number_input("Driver Nationality (Encoded)", min_value=0)
+    constructor_ref = st.sidebar.number_input("Constructor Reference (Encoded)", min_value=0)
     points = st.sidebar.number_input("Points Scored", min_value=0)
-    fastest_lap_rank = st.sidebar.number_input("Fastest Lap Rank", min_value=1)
-    laps_completed = st.sidebar.number_input("Laps Completed", min_value=0)
+    rank = st.sidebar.number_input("Fastest Lap Rank", min_value=1)
+    laps = st.sidebar.number_input("Laps Completed", min_value=0)
 
     if st.sidebar.button("Predict Final Race Position"):
-        input_data = [[
-            grid_position,
-            driver_encoded,
-            nationality_encoded,
-            points,
-            fastest_lap_rank,
-            laps_completed
-        ]]
-
+        input_data = [[grid, driver_ref, nationality, constructor_ref, points, rank, laps]]
         prediction = model.predict(input_data)[0]
 
-        st.markdown("<h3 style='text-align:center;'>Prediction Summary</h3>", unsafe_allow_html=True)
+        st.markdown("### 🎯 Prediction Summary")
         col1, col2, col3 = st.columns(3)
         col1.markdown(f"<div class='metric-box'><h4>Predicted Position</h4><h2 style='color:#FF3131;'>{int(prediction)}</h2></div>", unsafe_allow_html=True)
-        col2.markdown(f"<div class='metric-box'><h4>Starting Grid</h4><h2 style='color:#00BFFF;'>{grid_position}</h2></div>", unsafe_allow_html=True)
-        col3.markdown(f"<div class='metric-box'><h4>Laps Completed</h4><h2 style='color:#32CD32;'>{laps_completed}</h2></div>", unsafe_allow_html=True)
+        col2.markdown(f"<div class='metric-box'><h4>Starting Grid</h4><h2>{grid}</h2></div>", unsafe_allow_html=True)
+        col3.markdown(f"<div class='metric-box'><h4>Laps Completed</h4><h2>{laps}</h2></div>", unsafe_allow_html=True)
 
         st.markdown("### 📊 Prediction vs Grid Position")
         fig, ax = plt.subplots()
-        ax.bar(['Predicted Position', 'Grid Position'], [int(prediction), grid_position], color=['#FF3131', '#FFA500'])
+        ax.bar(['Predicted Position', 'Grid Position'], [int(prediction), grid], color=['#FF3131', '#FFA500'])
         ax.set_ylabel('Position')
         st.pyplot(fig)
 
-with tab2:
-    st.markdown("### 📊 Sample Data Overview")
+# ---------- Analysis ----------
+elif menu == "Analysis":
+    st.markdown("### 📊 Data Analysis")
+
     try:
         df = pd.read_csv('sample_data.csv')
         st.success("✅ Data loaded successfully!")
+
         st.dataframe(df)
 
-        col1, col2, col3 = st.columns(3)
-        col1.metric("Total Records", len(df))
-        col2.metric("Average Points", f"{df['points'].mean():.2f}")
-        col3.metric("Average Grid", f"{df['grid'].mean():.2f}")
+        tab1, tab2 = st.tabs(["Quality", "Performance"])
 
-        st.subheader("📊 Points Distribution")
-        fig = px.histogram(df, x='points', nbins=20, title='Points Scored Distribution', color_discrete_sequence=['#FF3131'])
-        st.plotly_chart(fig, use_container_width=True)
+        with tab1:
+            plot_type = st.selectbox("Select Plot Type", ["Histogram", "Box Plot", "Scatter Plot"])
+            column = st.selectbox("Select Column", df.columns)
 
-        st.subheader("🏁 Top 5 Teams by Points")
-        top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
-        fig = px.bar(top_teams, x='constructorRef', y='points', color='constructorRef', title='Top 5 Constructors', color_discrete_sequence=px.colors.qualitative.Bold)
-        st.plotly_chart(fig, use_container_width=True)
+            if plot_type == "Histogram":
+                fig = px.histogram(df, x=column, color_discrete_sequence=['#FF3131'])
+                st.plotly_chart(fig, use_container_width=True)
+            elif plot_type == "Box Plot":
+                fig = px.box(df, y=column, color_discrete_sequence=['#FFA500'])
+                st.plotly_chart(fig, use_container_width=True)
+            elif plot_type == "Scatter Plot":
+                x_col = st.selectbox("X Axis", df.columns)
+                y_col = st.selectbox("Y Axis", df.columns)
+                fig = px.scatter(df, x=x_col, y=y_col, color_discrete_sequence=['#00BFFF'])
+                st.plotly_chart(fig, use_container_width=True)
+
+        with tab2:
+            st.markdown("### 🏆 Top Constructors by Points")
+            top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5)
+            st.bar_chart(top_teams)
 
     except Exception:
-        st.warning("⚠️ No dataset found. Please upload 'sample_data.csv' to view data here.")
+        st.error("⚠️ Dataset not found. Please upload 'sample_data.csv'.")
 
-with tab3:
+# ---------- Models ----------
+elif menu == "Models":
+    st.markdown("### 🛠️ Model Details")
+    st.markdown("""
+    - Logistic Regression Model
+    - Trained on 7 race parameters
+    - Displays predicted final positions based on input
+    """)
+
+# ---------- Results ----------
+elif menu == "Results":
+    st.markdown("### 📑 Results")
+    st.markdown("""
+    - Accurate on historical data with reasonable RMSE
+    - Provides fast predictions on user input
+    """)
+
+# ---------- About ----------
+else:
     st.markdown("### ℹ️ About this Project")
     st.markdown("""
-    This is a simple **F1 Race Position Prediction App** powered by **Machine Learning**.
-
-    - 🔮 Predicts final race positions using Logistic Regression
-    - 📊 Displays colorful race insights and top-performing teams
-    - 🛠️ Built by **Ramandeep Kaur**
-    - 💻 Powered by scikit-learn with stylish Streamlit interface
+    This **F1 Race Position Predictor** is built by **Ramandeep Kaur** using Streamlit.
+    
+    - 🔮 Predict race positions  
+    - 📊 Explore data insights  
+    - 🛠️ Powered by Machine Learning  
+    - 🎨 Designed with interactive visualizations  
     """)
 
 st.markdown("<hr>", unsafe_allow_html=True)
