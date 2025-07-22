@@ -9,11 +9,8 @@ st.markdown(
     """
     <style>
     .stApp {
-        background-color: #FFEBF0;
-        color: black;
-    }
-    .sidebar .sidebar-content {
-        background-color: #E6E6FA;
+        background-color: #ffe6ec; /* Baby Pink */
+        color: #222222; /* Dark Gray Text */
     }
     .main-title {
         color: #FF3131;
@@ -22,17 +19,22 @@ st.markdown(
         font-weight: bold;
     }
     .metric-box {
-        background: rgba(255, 255, 255, 0.7);
+        background: rgba(255, 255, 255, 0.7); /* Slight white background */
+        color: #000000;
         padding: 15px;
         border-radius: 10px;
         text-align: center;
         margin-bottom: 20px;
-        border: 2px solid #FF69B4;
+    }
+    .stSidebar {
+        background-color: #f8d7da;
+        color: #222222;
     }
     </style>
     """,
     unsafe_allow_html=True
 )
+
 
 # ---------- Load Model ----------
 model = joblib.load('f1_position_model.pkl')
