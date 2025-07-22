@@ -4,97 +4,137 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 
-st.set_page_config(page_title="F1 Predictor Dashboard", layout="wide")
-
-# ---------- Styling ----------
-st.markdown("""
+# ---------- Background Styling ----------
+st.markdown(
+    """
     <style>
-    .stApp { background-color: #FFC0CB; }
-    .main-title { color: #FF3131; text-align: center; font-size: 50px; font-weight: bold; }
-    .sidebar-title { color: #FF3131; font-size: 30px; font-weight: bold; }
+    .stApp {
+        background-color: #FFEBF0;
+        color: black;
+    }
+    .sidebar .sidebar-content {
+        background-color: #E6E6FA;
+    }
+    .main-title {
+        color: #FF3131;
+        text-align: center;
+        font-size: 50px;
+        font-weight: bold;
+    }
     .metric-box {
-        background: rgba(0, 0, 0, 0.7);
+        background: rgba(255, 255, 255, 0.7);
         padding: 15px;
-        border-radius: 15px;
-        color: white;
+        border-radius: 10px;
         text-align: center;
         margin-bottom: 20px;
+        border: 2px solid #FF69B4;
     }
     </style>
-""", unsafe_allow_html=True)
+    """,
+    unsafe_allow_html=True
+)
 
-# ---------- Load Model & Data ----------
+# ---------- Load Model ----------
 model = joblib.load('f1_position_model.pkl')
-df = pd.read_csv('sample_data.csv')
 
-# ---------- Sidebar with Colorful Inputs ----------
-st.sidebar.markdown("<div class='sidebar-title'>🏁 F1 Race Inputs</div>", unsafe_allow_html=True)
-grid = st.sidebar.number_input("🎯 Grid Position", min_value=1, key='grid')
-driverRef = st.sidebar.number_input("👤 Driver Code (Encoded)", min_value=0, key='driver')
-nationality = st.sidebar.number_input("🌎 Driver Nationality (Encoded)", min_value=0, key='nationality')
-constructorRef = st.sidebar.number_input("🏢 Constructor Code (Encoded)", min_value=0, key='constructor')
-points = st.sidebar.number_input("⭐ Points Scored", min_value=0, key='points')
-rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1, key='rank')
-laps = st.sidebar.number_input("🔄 Laps Completed", min_value=0, key='laps')
-
-# ---------- Main Title ----------
-st.markdown("<h1 class='main-title'>F1 - Race Position Predictor</h1>", unsafe_allow_html=True)
+# ---------- Team Mapping ----------
+team_mapping = {
+    1: {"name": "Red Bull Racing", "logo": "https://upload.wikimedia.org/wikipedia/en/0/01/Red_Bull_Racing_logo.svg"},
+    2: {"name": "Mercedes AMG", "logo": "https://upload.wikimedia.org/wikipedia/commons/4/44/Mercedes-Benz_logo_2010.svg"},
+    3: {"name": "Ferrari", "logo": "https://upload.wikimedia.org/wikipedia/en/d/d8/Ferrari-Logo.svg"},
+    4: {"name": "McLaren", "logo": "https://upload.wikimedia.org/wikipedia/en/b/bf/McLaren_Racing_logo.svg"},
+    5: {"name": "Aston Martin", "logo": "https://upload.wikimedia.org/wikipedia/en/0/0e/Aston_Martin_Logo_2021.svg"}
+}
 
 # ---------- Tabs ----------
-tab1, tab2, tab3, tab4, tab5 = st.tabs(["🏠 Dashboard", "📈 Analysis", "🤖 Models", "📊 Results", "ℹ️ About"])
+tab1, tab2, tab3 = st.tabs(["🏎️ Dashboard", "📊 Analysis", "ℹ️ About"])
 
 with tab1:
-    st.subheader("🏁 Prediction Dashboard")
-    if st.button("🚀 Predict Final Race Position"):
-        input_data = [[grid, driverRef, nationality, constructorRef, points, rank, laps]]
+    st.markdown("<h1 class='main-title'>F1 - Race Position Predictor</h1>", unsafe_allow_html=True)
+    
+    with st.sidebar:
+        st.markdown("<h2 style='color:#FF3131;'>🏁 F1 Race Inputs</h2>", unsafe_allow_html=True)
+        grid_position = st.number_input("🎯 Grid Position", min_value=1)
+        driver_encoded = st.number_input("👤 Driver Code (Encoded)", min_value=0)
+        nationality_encoded = st.number_input("🌐 Driver Nationality (Encoded)", min_value=0)
+        constructor_encoded = st.number_input("🏢 Constructor Code (Encoded)", min_value=0)
+        points = st.number_input("⭐ Points Scored", min_value=0)
+        fastest_lap_rank = st.number_input("⚡ Fastest Lap Rank", min_value=1)
+        laps_completed = st.number_input("📝 Laps Completed", min_value=0)
+        predict = st.button("🔮 Predict Final Race Position")
+
+    if predict:
+        input_data = [[
+            grid_position,
+            driver_encoded,
+            nationality_encoded,
+            constructor_encoded,
+            points,
+            fastest_lap_rank,
+            laps_completed
+        ]]
         prediction = model.predict(input_data)[0]
+
+        st.markdown("<h3 style='text-align:center;'>Prediction Summary</h3>", unsafe_allow_html=True)
         col1, col2, col3 = st.columns(3)
         col1.markdown(f"<div class='metric-box'><h4>Predicted Position</h4><h2 style='color:#FF3131;'>{int(prediction)}</h2></div>", unsafe_allow_html=True)
-        col2.markdown(f"<div class='metric-box'><h4>Starting Grid</h4><h2>{grid}</h2></div>", unsafe_allow_html=True)
-        col3.markdown(f"<div class='metric-box'><h4>Laps Completed</h4><h2>{laps}</h2></div>", unsafe_allow_html=True)
+        col2.markdown(f"<div class='metric-box'><h4>Starting Grid</h4><h2>{grid_position}</h2></div>", unsafe_allow_html=True)
+        col3.markdown(f"<div class='metric-box'><h4>Laps Completed</h4><h2>{laps_completed}</h2></div>", unsafe_allow_html=True)
+
+        st.markdown("### 📊 Prediction vs Grid Position")
+        fig, ax = plt.subplots()
+        ax.bar(['Predicted Position', 'Grid Position'], [int(prediction), grid_position], color=['#FF3131', '#FFA500'])
+        ax.set_ylabel('Position')
+        st.pyplot(fig)
 
 with tab2:
-    st.subheader("📊 Data Analysis")
-    chart_type = st.selectbox("📋 Select Chart Type", ["Histogram", "Boxplot", "Scatterplot"])
-    selected_col = st.selectbox("📌 Select Column", df.columns)
+    st.markdown("### 📊 Sample Data Analysis")
+    try:
+        df = pd.read_csv('sample_data.csv')
+        st.success("✅ Data loaded successfully!")
+        st.dataframe(df)
 
-    if chart_type == "Histogram":
-        fig = px.histogram(df, x=selected_col, color_discrete_sequence=['#FF69B4'])
-        st.plotly_chart(fig)
-    elif chart_type == "Boxplot":
-        fig = px.box(df, y=selected_col, color_discrete_sequence=['#BA55D3'])
-        st.plotly_chart(fig)
-    elif chart_type == "Scatterplot":
-        x_col = st.selectbox("X-axis", df.columns)
-        y_col = st.selectbox("Y-axis", df.columns)
-        fig = px.scatter(df, x=x_col, y=y_col, color_discrete_sequence=['#20B2AA'])
-        st.plotly_chart(fig)
+        chart_type = st.selectbox("Select Chart Type", ["Histogram", "Box Plot", "Scatter Plot"])
+        selected_column = st.selectbox("Select Column to Plot", df.columns)
 
-    st.markdown("### 🎯 Top Teams Performance")
-    top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5)
-    st.bar_chart(top_teams)
+        if chart_type == "Histogram":
+            fig = px.histogram(df, x=selected_column, color_discrete_sequence=['#FF3131'])
+            st.plotly_chart(fig, use_container_width=True)
+        elif chart_type == "Box Plot":
+            fig = px.box(df, y=selected_column, color_discrete_sequence=['#FF3131'])
+            st.plotly_chart(fig, use_container_width=True)
+        elif chart_type == "Scatter Plot":
+            x_col = st.selectbox("Select X-axis", df.columns)
+            y_col = st.selectbox("Select Y-axis", df.columns)
+            fig = px.scatter(df, x=x_col, y=y_col, color_discrete_sequence=['#FF3131'])
+            st.plotly_chart(fig, use_container_width=True)
+
+        st.markdown("### 🏆 Top 5 Teams")
+        top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5)
+        team_data = []
+        for idx, points in top_teams.items():
+            team_info = team_mapping.get(idx, {"name": "Unknown", "logo": ""})
+            team_data.append({
+                "Constructor Code": idx,
+                "Team Name": team_info['name'],
+                "Points": points,
+                "Logo": f"![logo]({team_info['logo']})"
+            })
+        st.markdown(pd.DataFrame(team_data).to_markdown(index=False), unsafe_allow_html=True)
+
+    except Exception:
+        st.warning("⚠️ No dataset found. Please upload 'sample_data.csv' to view data here.")
 
 with tab3:
-    st.subheader("🤖 Model Info")
+    st.markdown("### ℹ️ About this Project")
     st.markdown("""
-    - Logistic Regression Model  
-    - Trained on 7 Features  
-    - Performance evaluated on historical F1 data
+    This is a colorful **F1 Race Position Prediction App** powered by **Machine Learning**.
+
+    - 🔮 Predict final race positions using Logistic Regression
+    - 📊 Visualize race data with various plot types
+    - 🏆 Explore team performance with logos
+    - 💻 Developed by **Ramandeep Kaur**
     """)
 
-with tab4:
-    st.subheader("📊 Prediction Results")
-    st.dataframe(df.head(10))
-
-with tab5:
-    st.subheader("ℹ️ About This Project")
-    st.markdown("""
-    This colorful F1 Race Predictor app allows you to:
-    - 🎯 Predict race positions based on race inputs  
-    - 📊 Analyze F1 data with interactive visualizations  
-    - 🛠️ Built with ❤️ by **Ramandeep Kaur**  
-    """)
-
-# ---------- Footer ----------
 st.markdown("<hr>", unsafe_allow_html=True)
 st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
