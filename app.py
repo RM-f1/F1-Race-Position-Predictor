@@ -15,8 +15,8 @@ training_data = pd.read_csv("sample_data.csv")
 
 # Encode categorical variables (fit encoders on training data)
 le_constructor = LabelEncoder()
-training_data['constructor'] = training_data['constructor'].astype(str)
-le_constructor.fit(training_data['constructor'])
+training_data['constructorRef'] = training_data['constructorRef'].astype(str)
+le_constructor.fit(training_data['constructorRef'])
 
 # Reverse mapping for team name to code
 constructor_reverse = {team: i for i, team in enumerate(le_constructor.classes_)}
@@ -93,12 +93,12 @@ elif page == "Analysis":
     quality_metric = st.selectbox("Select Feature", df.columns)
 
     if chart_type == "Histogram":
-        fig = px.histogram(df, x=quality_metric, color="constructor")
+        fig = px.histogram(df, x=quality_metric, color="constructorRef")
     elif chart_type == "Boxplot":
-        fig = px.box(df, x="constructor", y=quality_metric)
+        fig = px.box(df, x="constructorRef", y=quality_metric)
     else:
         y_metric = st.selectbox("Y-Axis", [col for col in df.columns if col != quality_metric])
-        fig = px.scatter(df, x=quality_metric, y=y_metric, color="constructor")
+        fig = px.scatter(df, x=quality_metric, y=y_metric, color="constructorRef")
 
     st.plotly_chart(fig, use_container_width=True)
 
