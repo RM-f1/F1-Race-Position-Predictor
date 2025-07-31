@@ -6,6 +6,44 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import plotly.express as px
 
+# --- Constructor Mapping (Manual Encoding) ---
+
+team_labels = [
+    'afm', 'ags', 'alfa', 'alphatauri', 'alpine', 'alta', 'arrows', 'aston_martin',
+    'ats', 'bar', 'behra-porsche', 'benetton', 'bmw', 'bmw_sauber', 'boro',
+    'brabham', 'brabham-alfa_romeo', 'brabham-brm', 'brabham-climax',
+    'brabham-ford', 'brabham-repco', 'brawn', 'brm', 'brm-ford', 'brp', 'bugatti',
+    'butterworth', 'caterham', 'coloni', 'connaught', 'cooper',
+    'cooper-alfa_romeo', 'cooper-ats', 'cooper-borgward', 'cooper-brm',
+    'cooper-castellotti', 'cooper-climax', 'cooper-ferrari', 'cooper-maserati',
+    'cooper-osca', 'dallara', 'de_tomaso-alfa_romeo', 'deidt', 'derrington',
+    'dunn', 'eagle-climax', 'eagle-weslake', 'emeryson', 'emw', 'enb', 'ensign',
+    'epperly', 'era', 'eurobrun', 'ewing', 'ferguson', 'ferrari', 'fittipaldi',
+    'fondmetal', 'footwork', 'force_india', 'forti', 'frazer_nash', 'gilby',
+    'gordini', 'haas', 'hall', 'hesketh', 'hill', 'honda', 'hrt', 'hwm',
+    'iso_marlboro', 'jaguar', 'jbw', 'jordan', 'klenk', 'kojima', 'kurtis_kraft',
+    'kuzma', 'lago', 'lambo', 'lancia', 'langley', 'larrousse', 'lds',
+    'lds-alfa_romeo', 'lds-climax', 'lec', 'lesovsky', 'leyton', 'ligier', 'lola',
+    'lotus-brm', 'lotus-climax', 'lotus-ford', 'lotus-maserati', 'lotus-pw',
+    'lotus_f1', 'lotus_racing', 'lyncar', 'manor', 'march', 'march-alfa_romeo',
+    'march-ford', 'marchese', 'martini', 'marussia', 'maserati', 'matra',
+    'matra-ford', 'mclaren', 'mclaren-alfa_romeo', 'mclaren-brm', 'mclaren-ford',
+    'mclaren-seren', 'mercedes', 'merzario', 'meskowski', 'mf1', 'minardi', 'moda',
+    'moore', 'nichels', 'onyx', 'osca', 'osella', 'pacific', 'pankratz', 'parnelli',
+    'pawl', 'penske', 'phillips', 'porsche', 'prost', 'protos', 'racing_point',
+    'ram', 'rb', 'rebaque', 'red_bull', 'renault', 'rial', 'sauber', 'scarab',
+    'schroeder', 'scirocco', 'shadow', 'shadow-ford', 'shadow-matra', 'shannon',
+    'sherman', 'simca', 'simtek', 'spirit', 'spyker', 'spyker_mf1', 'stebro',
+    'stevens', 'stewart', 'super_aguri', 'surtees', 'team_lotus', 'tec-mec',
+    'tecno', 'theodore', 'token', 'toleman', 'tomaso', 'toro_rosso', 'toyota',
+    'trevis', 'trojan', 'tyrrell', 'vanwall', 'veritas', 'vhristensen', 'virgin',
+    'watson', 'williams', 'wolf', 'zakspeed'
+]
+
+constructor_mapping = {i: team for i, team in enumerate(team_labels)}
+constructor_reverse = {team: i for i, team in enumerate(team_labels)}
+
+
 # ---------- Custom CSS ----------
 st.markdown("""
 <style>
@@ -51,6 +89,12 @@ try:
 except:
     data_loaded = False
 
+# ----- Constructor Mapping (Optional Input Enhancement) -----
+constructor_names = ['Red Bull', 'Ferrari', 'Mercedes', 'McLaren', 'Alpine', 'Aston Martin', 'Williams', 'Haas', 'AlphaTauri', 'Alfa Romeo']  # Replace with actual
+constructor_mapping = {i: name for i, name in enumerate(constructor_names)}
+constructor_reverse = {name: i for i, name in constructor_mapping.items()}
+
+
 # ---------- Sidebar Inputs ----------
 
 with st.sidebar.expander("ℹ️ Input Field Guide"):
@@ -69,7 +113,8 @@ st.sidebar.markdown("<p class='sidebar-title'>🏁 F1 Race Inputs</p>", unsafe_a
 grid = st.sidebar.number_input("🎯 Grid Position", min_value=1, help="Starting position on the race grid (1 = pole)")
 driverRef = st.sidebar.number_input("🧑‍✈️ Driver Code (Encoded)", min_value=0, help="Encoded ID for the driver")
 nationality = st.sidebar.number_input("🌐 Driver Nationality (Encoded)", min_value=0, help="Numerically encoded nationality")
-constructor = st.sidebar.number_input("🏢 Constructor Code (Encoded)", min_value=0, help="Encoded constructor/team code")
+constructor_name = st.sidebar.selectbox("🏢 Constructor", constructor_names)
+constructor = constructor_reverse[constructor_name]
 points = st.sidebar.number_input("⭐ Points Scored", min_value=0, help="Driver's total season points before this race")
 rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1, help="Fastest lap rank (1 = fastest)")
 laps = st.sidebar.number_input("📋 Laps Completed", min_value=0, help="Total number of race laps completed")
