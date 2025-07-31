@@ -1,210 +1,125 @@
-from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
-import numpy as np
 import streamlit as st
-import joblib
 import pandas as pd
-import matplotlib.pyplot as plt
+import numpy as np
 import plotly.express as px
+import joblib
+from sklearn.preprocessing import LabelEncoder
+import os
+from PIL import Image
 
-# --- Constructor Mapping (Manual Encoding) ---
+# Load your model
+model = joblib.load("f1_position_model.pkl")
 
-team_labels = [
-    'afm', 'ags', 'alfa', 'alphatauri', 'alpine', 'alta', 'arrows', 'aston_martin',
-    'ats', 'bar', 'behra-porsche', 'benetton', 'bmw', 'bmw_sauber', 'boro',
-    'brabham', 'brabham-alfa_romeo', 'brabham-brm', 'brabham-climax',
-    'brabham-ford', 'brabham-repco', 'brawn', 'brm', 'brm-ford', 'brp', 'bugatti',
-    'butterworth', 'caterham', 'coloni', 'connaught', 'cooper',
-    'cooper-alfa_romeo', 'cooper-ats', 'cooper-borgward', 'cooper-brm',
-    'cooper-castellotti', 'cooper-climax', 'cooper-ferrari', 'cooper-maserati',
-    'cooper-osca', 'dallara', 'de_tomaso-alfa_romeo', 'deidt', 'derrington',
-    'dunn', 'eagle-climax', 'eagle-weslake', 'emeryson', 'emw', 'enb', 'ensign',
-    'epperly', 'era', 'eurobrun', 'ewing', 'ferguson', 'ferrari', 'fittipaldi',
-    'fondmetal', 'footwork', 'force_india', 'forti', 'frazer_nash', 'gilby',
-    'gordini', 'haas', 'hall', 'hesketh', 'hill', 'honda', 'hrt', 'hwm',
-    'iso_marlboro', 'jaguar', 'jbw', 'jordan', 'klenk', 'kojima', 'kurtis_kraft',
-    'kuzma', 'lago', 'lambo', 'lancia', 'langley', 'larrousse', 'lds',
-    'lds-alfa_romeo', 'lds-climax', 'lec', 'lesovsky', 'leyton', 'ligier', 'lola',
-    'lotus-brm', 'lotus-climax', 'lotus-ford', 'lotus-maserati', 'lotus-pw',
-    'lotus_f1', 'lotus_racing', 'lyncar', 'manor', 'march', 'march-alfa_romeo',
-    'march-ford', 'marchese', 'martini', 'marussia', 'maserati', 'matra',
-    'matra-ford', 'mclaren', 'mclaren-alfa_romeo', 'mclaren-brm', 'mclaren-ford',
-    'mclaren-seren', 'mercedes', 'merzario', 'meskowski', 'mf1', 'minardi', 'moda',
-    'moore', 'nichels', 'onyx', 'osca', 'osella', 'pacific', 'pankratz', 'parnelli',
-    'pawl', 'penske', 'phillips', 'porsche', 'prost', 'protos', 'racing_point',
-    'ram', 'rb', 'rebaque', 'red_bull', 'renault', 'rial', 'sauber', 'scarab',
-    'schroeder', 'scirocco', 'shadow', 'shadow-ford', 'shadow-matra', 'shannon',
-    'sherman', 'simca', 'simtek', 'spirit', 'spyker', 'spyker_mf1', 'stebro',
-    'stevens', 'stewart', 'super_aguri', 'surtees', 'team_lotus', 'tec-mec',
-    'tecno', 'theodore', 'token', 'toleman', 'tomaso', 'toro_rosso', 'toyota',
-    'trevis', 'trojan', 'tyrrell', 'vanwall', 'veritas', 'vhristensen', 'virgin',
-    'watson', 'williams', 'wolf', 'zakspeed'
-]
+# Load the dataset used during training for consistent encoding
+training_data = pd.read_csv("sample_data.csv")
 
-constructor_mapping = {i: team for i, team in enumerate(team_labels)}
-constructor_reverse = {team: i for i, team in enumerate(team_labels)}
+# Encode categorical variables (fit encoders on training data)
+le_constructor = LabelEncoder()
+training_data['constructor'] = training_data['constructor'].astype(str)
+le_constructor.fit(training_data['constructor'])
 
+# Reverse mapping for team name to code
+constructor_reverse = {team: i for i, team in enumerate(le_constructor.classes_)}
 
-# ---------- Custom CSS ----------
-st.markdown("""
+# Page config
+st.set_page_config(page_title="F1 - Race Position Predictor", layout="wide")
+
+# Custom dark theme background
+page_bg_img = f"""
 <style>
-.stApp {
-    background-color: #0d0d0d;
-    color: #ffffff;
-    font-family: 'Segoe UI', sans-serif;
-}
-h1, h2, h3, h4, h5 {
-    color: #00A8E8;
-}
-.stSidebar {
-    background-color: #1a1a1a;
-    color: #ffffff;
-}
-.metric-box {
-    background: rgba(30, 30, 30, 0.8);
-    color: #ffffff;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-    margin-bottom: 20px;
-}
-.sidebar-title {
-    font-size: 24px;
-    color: #00A8E8;
-    font-weight: bold;
-}
-.sidebar-label {
-    font-weight: bold;
-    color: #ffffff;
-}
+[data-testid="stAppViewContainer"] {{
+    background-color: #0e1117;
+}}
+[data-testid="stSidebar"] {{
+    background-color: #161a23;
+}}
+h1, h2, h3, h4, h5, h6, p, label, .st-bb, .st-at, .st-af {{
+    color: #f0f0f0;
+}}
 </style>
-""", unsafe_allow_html=True)
+"""
 
-# ---------- Load Model ----------
-model = joblib.load('f1_position_model.pkl')
+st.markdown(page_bg_img, unsafe_allow_html=True)
 
-# ---------- Load Data ----------
-try:
-    df = pd.read_csv('sample_data.csv')
-    data_loaded = True
-except:
-    data_loaded = False
+# Sidebar
+st.sidebar.title("🏁 F1 Race Position Predictor")
+page = st.sidebar.radio("Navigate", ["Dashboard", "Analysis", "About"])
 
-# ----- Constructor Mapping (Optional Input Enhancement) -----
-constructor_names = ['Red Bull', 'Ferrari', 'Mercedes', 'McLaren', 'Alpine', 'Aston Martin', 'Williams', 'Haas', 'AlphaTauri', 'Alfa Romeo']  # Replace with actual
-constructor_mapping = {i: name for i, name in enumerate(constructor_names)}
-constructor_reverse = {name: i for i, name in constructor_mapping.items()}
+# Dashboard Page
+if page == "Dashboard":
+    st.title("🏎️ Final Race Position Predictor")
 
+    col1, col2 = st.columns(2)
 
-# ---------- Sidebar Inputs ----------
+    with col1:
+        driver_points = st.number_input("Driver Points", min_value=0)
+        qualifying_position = st.number_input("Qualifying Position", min_value=1)
+        grid = st.number_input("Grid Position", min_value=1)
 
-with st.sidebar.expander("ℹ️ Input Field Guide"):
-    st.markdown("""
-    - **Grid Position**: Driver’s starting place on the grid (1 = Pole Position).
-    - **Driver Code**: Unique encoded ID of the driver.
-    - **Nationality**: Driver's nationality encoded as a number.
-    - **Constructor Code**: Encoded ID of the constructor/team (e.g., Ferrari, Red Bull).
-    - **Points Scored**: Championship points scored before the race.
-    - **Fastest Lap Rank**: Driver’s rank in fastest lap times (1 = fastest).
-    - **Laps Completed**: Number of laps completed in the race.
-    """)
+    with col2:
+        constructor_name = st.selectbox("Constructor", options=le_constructor.classes_)
+        weather = st.selectbox("Weather Condition", ["Sunny", "Rainy", "Cloudy", "Mixed"])
+        safety_car = st.selectbox("Safety Car", ["Yes", "No"])
 
-st.sidebar.markdown("<p class='sidebar-title'>🏁 F1 Race Inputs</p>", unsafe_allow_html=True)
+    # Convert inputs to numerical features for the model
+    constructor_encoded = constructor_reverse.get(constructor_name, -1)
+    weather_encoded = ["Sunny", "Rainy", "Cloudy", "Mixed"].index(weather)
+    safety_car_encoded = 1 if safety_car == "Yes" else 0
 
-grid = st.sidebar.number_input("🎯 Grid Position", min_value=1, help="Starting position on the race grid (1 = pole)")
-driverRef = st.sidebar.number_input("🧑‍✈️ Driver Code (Encoded)", min_value=0, help="Encoded ID for the driver")
-nationality = st.sidebar.number_input("🌐 Driver Nationality (Encoded)", min_value=0, help="Numerically encoded nationality")
-constructor_name = st.sidebar.selectbox("🏢 Constructor", constructor_names)
-constructor = constructor_reverse[constructor_name]
-points = st.sidebar.number_input("⭐ Points Scored", min_value=0, help="Driver's total season points before this race")
-rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1, help="Fastest lap rank (1 = fastest)")
-laps = st.sidebar.number_input("📋 Laps Completed", min_value=0, help="Total number of race laps completed")
-
-# ---------- Tabs ----------
-tab1, tab2, tab3 = st.tabs(["🏎️ Dashboard", "📊 Analysis", "ℹ️ About"])
-
-# ---------- Dashboard Tab ----------
-with tab1:
-    st.markdown("<h1 style='text-align:center;'>F1 - Race Position Predictor</h1>", unsafe_allow_html=True)
+    input_features = np.array([[driver_points, qualifying_position, grid, constructor_encoded, weather_encoded, safety_car_encoded]])
 
     if st.sidebar.button("Predict Final Race Position"):
-        input_data = [[grid, driverRef, nationality, constructor, points, rank, laps]]
-        prediction = model.predict(input_data)[0]
+        prediction = model.predict(input_features)
+        predicted_position = int(np.round(prediction[0]))
 
-        st.markdown("<h3 style='text-align:center;'>Prediction Summary</h3>", unsafe_allow_html=True)
-        col1, col2, col3 = st.columns(3)
-        col1.markdown(f"<div class='metric-box'><h4>Predicted Position</h4><h2 style='color:#FF3131;'>{int(prediction)}</h2></div>", unsafe_allow_html=True)
-        col2.markdown(f"<div class='metric-box'><h4>Starting Grid</h4><h2>{grid}</h2></div>", unsafe_allow_html=True)
-        col3.markdown(f"<div class='metric-box'><h4>Laps Completed</h4><h2>{laps}</h2></div>", unsafe_allow_html=True)
+        st.subheader(f"🎯 Predicted Final Race Position: {predicted_position}")
 
-        st.markdown("### 📊 Prediction vs Grid Position")
-        fig, ax = plt.subplots()
-        ax.bar(['Predicted Position', 'Grid Position'], [int(prediction), grid], color=['#FF3131', '#FFA500'])
-        ax.set_ylabel('Position')
-        st.pyplot(fig)
-
-        import os
-        from PIL import Image
-
-        # Predicted constructor name (must match your file naming)
-        team_name = predicted_constructor  # already predicted
-
-        # Construct path
+        # Show logo
+        team_name = constructor_name.lower().replace(" ", "_")
         logo_path = f"assets/{team_name}.png"
 
-        # Fallback in case logo not found
         if not os.path.exists(logo_path):
-        logo_path = "assets/default.png"  # optional default logo
+            logo_path = "assets/default.png"
 
-        # Display logo
-        st.image(logo_path, width=150, caption=team_name)
+        st.image(logo_path, width=150, caption=constructor_name)
 
+# Analysis Page
+elif page == "Analysis":
+    st.title("📊 Data Analysis")
 
-# ---------- Analysis Tab ----------
-with tab2:
-    st.markdown("### 📊 Data Analysis")
-    if data_loaded:
-        st.success("✅ Data loaded successfully!")
-        st.dataframe(df)
+    df = pd.read_csv("sample_data.csv")
 
-        option = st.selectbox("Select Visualization", ["Histogram", "Box Plot", "Scatter Plot"])
-        if option == "Histogram":
-            fig = px.histogram(df, x='points', nbins=20, title='Points Distribution', color_discrete_sequence=['#FF3131'])
-            st.plotly_chart(fig)
-        elif option == "Box Plot":
-            fig = px.box(df, y='points', title='Points Box Plot', color_discrete_sequence=['#FF3131'])
-            st.plotly_chart(fig)
-        else:
-            fig = px.scatter(df, x='grid', y='points', color='constructorRef', title='Grid vs Points by Constructor')
-            st.plotly_chart(fig)
+    chart_type = st.selectbox("Choose Chart Type", ["Histogram", "Boxplot", "Scatterplot"])
+    quality_metric = st.selectbox("Select Feature", df.columns)
 
-        st.markdown("### 🏆 Top 5 Constructors by Points")
-        try:
-            top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
-            top_teams.columns = ['Constructor', 'Total Points']
-
-            st.markdown("#### 🏎️ Top Constructors by Points")
-
-            for index, row in top_teams.iterrows():
-                team = str(row['Constructor']).lower().replace(" ", "")
-                st.markdown(f"**{row['Constructor']}** — {int(row['Total Points'])} points")
-                try:
-                    st.image(f"assets/{team}.png", width=150)
-                except:
-                    st.info("⚠️ Logo not found.")
-        except:
-            st.warning("Data doesn't have required columns for this analysis.")
+    if chart_type == "Histogram":
+        fig = px.histogram(df, x=quality_metric, color="constructor")
+    elif chart_type == "Boxplot":
+        fig = px.box(df, x="constructor", y=quality_metric)
     else:
-        st.warning("⚠️ No dataset found. Please upload 'sample_data.csv'.")
+        y_metric = st.selectbox("Y-Axis", [col for col in df.columns if col != quality_metric])
+        fig = px.scatter(df, x=quality_metric, y=y_metric, color="constructor")
 
-# ---------- About Tab ----------
-with tab3:
-    st.markdown("### ℹ️ About this Project")
+    st.plotly_chart(fig, use_container_width=True)
+
+# About Page
+elif page == "About":
+    st.title("📘 About This App")
     st.markdown("""
-    - 🏁 Predicts final race position using Machine Learning.
-    - 📊 Analyze historical F1 data.
-    - 🎨 Colorful & Clean Interface.
-    """)
-   
+    This Streamlit app predicts the final race position of an F1 driver using machine learning.
+    
+    ### Features Used:
+    - Driver points
+    - Qualifying position
+    - Grid position
+    - Constructor (Team)
+    - Weather conditions
+    - Safety car appearance
 
-    # st.image("assets/model_pipeline.png")
-    st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
+    ### Built With:
+    - Scikit-learn
+    - Streamlit
+    - Plotly for visualization
+
+    Created by RM-f1
+    """)
