@@ -74,7 +74,6 @@ points = st.sidebar.number_input("⭐ Points Scored", min_value=0, help="Driver'
 rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1, help="Fastest lap rank (1 = fastest)")
 laps = st.sidebar.number_input("📋 Laps Completed", min_value=0, help="Total number of race laps completed")
 
-
 # ---------- Tabs ----------
 tab1, tab2, tab3 = st.tabs(["🏎️ Dashboard", "📊 Analysis", "ℹ️ About"])
 
@@ -118,20 +117,18 @@ with tab2:
 
         st.markdown("### 🏆 Top 5 Constructors by Points")
         try:
-           top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
-top_teams.columns = ['Constructor', 'Total Points']
+            top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
+            top_teams.columns = ['Constructor', 'Total Points']
 
-st.markdown("#### 🏎️ Top Constructors by Points")
+            st.markdown("#### 🏎️ Top Constructors by Points")
 
-# Show logos + stats
-for index, row in top_teams.iterrows():
-    team = str(row['Constructor']).lower().replace(" ", "")
-    st.markdown(f"**{row['Constructor']}** — {int(row['Total Points'])} points")
-    try:
-        st.image(f"assets/{team}.png", width=150)
-    except:
-        st.info("⚠️ Logo not found.")
-
+            for index, row in top_teams.iterrows():
+                team = str(row['Constructor']).lower().replace(" ", "")
+                st.markdown(f"**{row['Constructor']}** — {int(row['Total Points'])} points")
+                try:
+                    st.image(f"assets/{team}.png", width=150)
+                except:
+                    st.info("⚠️ Logo not found.")
         except:
             st.warning("Data doesn't have required columns for this analysis.")
     else:
@@ -147,17 +144,16 @@ with tab3:
     - 💻 Developed by **Ramandeep Kaur**.
     """)
     st.markdown("<hr>", unsafe_allow_html=True)
-st.markdown("### 🔧 Model Pipeline")
-st.markdown("""
-- **Input Features** ➝ Scaled
-- Passed into a **Stacking Regressor** combining:
-    - Ridge
-    - Lasso
-    - Gradient Boosting
-    - XGBoost
-- Final prediction = Weighted combination of all regressors.
-""")
+    st.markdown("### 🔧 Model Pipeline")
+    st.markdown("""
+    - **Input Features** ➝ Scaled
+    - Passed into a **Stacking Regressor** combining:
+        - Ridge
+        - Lasso
+        - Gradient Boosting
+        - XGBoost
+    - Final prediction = Weighted combination of all regressors.
+    """)
 
-st.image("assets/model_pipeline.png")  # optional visual diagram
-
+    st.image("assets/model_pipeline.png")
     st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
