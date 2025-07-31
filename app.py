@@ -155,5 +155,5 @@ with tab3:
     - Final prediction = Weighted combination of all regressors.
     """)
 
-    st.image("assets/model_pipeline.png")
+    # st.image("assets/model_pipeline.png")
     st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
