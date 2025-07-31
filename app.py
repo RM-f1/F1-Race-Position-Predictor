@@ -1,3 +1,5 @@
+from sklearn.metrics import mean_squared_error, mean_absolute_error, r2_score
+import numpy as np
 import streamlit as st
 import joblib
 import pandas as pd
@@ -8,20 +10,20 @@ import plotly.express as px
 st.markdown("""
 <style>
 .stApp {
-    background-color: #ffe6ec;
-    color: #222222;
+    background-color: #0d0d0d;
+    color: #ffffff;
     font-family: 'Segoe UI', sans-serif;
 }
 h1, h2, h3, h4, h5 {
-    color: #FF3131;
+    color: #00A8E8;
 }
 .stSidebar {
-    background-color: #f8d7da;
-    color: #222222;
+    background-color: #1a1a1a;
+    color: #ffffff;
 }
 .metric-box {
-    background: rgba(255, 255, 255, 0.8);
-    color: #222222;
+    background: rgba(30, 30, 30, 0.8);
+    color: #ffffff;
     padding: 15px;
     border-radius: 10px;
     text-align: center;
@@ -29,12 +31,12 @@ h1, h2, h3, h4, h5 {
 }
 .sidebar-title {
     font-size: 24px;
-    color: #FF3131;
+    color: #00A8E8;
     font-weight: bold;
 }
 .sidebar-label {
     font-weight: bold;
-    color: #222222;
+    color: #ffffff;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -50,15 +52,28 @@ except:
     data_loaded = False
 
 # ---------- Sidebar Inputs ----------
+
+with st.sidebar.expander("ℹ️ Input Field Guide"):
+    st.markdown("""
+    - **Grid Position**: Driver’s starting place on the grid (1 = Pole Position).
+    - **Driver Code**: Unique encoded ID of the driver.
+    - **Nationality**: Driver's nationality encoded as a number.
+    - **Constructor Code**: Encoded ID of the constructor/team (e.g., Ferrari, Red Bull).
+    - **Points Scored**: Championship points scored before the race.
+    - **Fastest Lap Rank**: Driver’s rank in fastest lap times (1 = fastest).
+    - **Laps Completed**: Number of laps completed in the race.
+    """)
+
 st.sidebar.markdown("<p class='sidebar-title'>🏁 F1 Race Inputs</p>", unsafe_allow_html=True)
 
-grid = st.sidebar.number_input("🎯 Grid Position", min_value=1)
-driverRef = st.sidebar.number_input("🧑‍✈️ Driver Code (Encoded)", min_value=0)
-nationality = st.sidebar.number_input("🌐 Driver Nationality (Encoded)", min_value=0)
-constructor = st.sidebar.number_input("🏢 Constructor Code (Encoded)", min_value=0)
-points = st.sidebar.number_input("⭐ Points Scored", min_value=0)
-rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1)
-laps = st.sidebar.number_input("📋 Laps Completed", min_value=0)
+grid = st.sidebar.number_input("🎯 Grid Position", min_value=1, help="Starting position on the race grid (1 = pole)")
+driverRef = st.sidebar.number_input("🧑‍✈️ Driver Code (Encoded)", min_value=0, help="Encoded ID for the driver")
+nationality = st.sidebar.number_input("🌐 Driver Nationality (Encoded)", min_value=0, help="Numerically encoded nationality")
+constructor = st.sidebar.number_input("🏢 Constructor Code (Encoded)", min_value=0, help="Encoded constructor/team code")
+points = st.sidebar.number_input("⭐ Points Scored", min_value=0, help="Driver's total season points before this race")
+rank = st.sidebar.number_input("⚡ Fastest Lap Rank", min_value=1, help="Fastest lap rank (1 = fastest)")
+laps = st.sidebar.number_input("📋 Laps Completed", min_value=0, help="Total number of race laps completed")
+
 
 # ---------- Tabs ----------
 tab1, tab2, tab3 = st.tabs(["🏎️ Dashboard", "📊 Analysis", "ℹ️ About"])
@@ -103,8 +118,20 @@ with tab2:
 
         st.markdown("### 🏆 Top 5 Constructors by Points")
         try:
-            top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
-            st.dataframe(top_teams)
+           top_teams = df.groupby('constructorRef')['points'].sum().sort_values(ascending=False).head(5).reset_index()
+top_teams.columns = ['Constructor', 'Total Points']
+
+st.markdown("#### 🏎️ Top Constructors by Points")
+
+# Show logos + stats
+for index, row in top_teams.iterrows():
+    team = str(row['Constructor']).lower().replace(" ", "")
+    st.markdown(f"**{row['Constructor']}** — {int(row['Total Points'])} points")
+    try:
+        st.image(f"assets/{team}.png", width=150)
+    except:
+        st.info("⚠️ Logo not found.")
+
         except:
             st.warning("Data doesn't have required columns for this analysis.")
     else:
@@ -120,4 +147,17 @@ with tab3:
     - 💻 Developed by **Ramandeep Kaur**.
     """)
     st.markdown("<hr>", unsafe_allow_html=True)
+st.markdown("### 🔧 Model Pipeline")
+st.markdown("""
+- **Input Features** ➝ Scaled
+- Passed into a **Stacking Regressor** combining:
+    - Ridge
+    - Lasso
+    - Gradient Boosting
+    - XGBoost
+- Final prediction = Weighted combination of all regressors.
+""")
+
+st.image("assets/model_pipeline.png")  # optional visual diagram
+
     st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
