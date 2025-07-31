@@ -142,6 +142,23 @@ with tab1:
         ax.set_ylabel('Position')
         st.pyplot(fig)
 
+        import os
+        from PIL import Image
+
+        # Predicted constructor name (must match your file naming)
+        team_name = predicted_constructor  # already predicted
+
+        # Construct path
+        logo_path = f"assets/{team_name}.png"
+
+        # Fallback in case logo not found
+        if not os.path.exists(logo_path):
+        logo_path = "assets/default.png"  # optional default logo
+
+        # Display logo
+        st.image(logo_path, width=150, caption=team_name)
+
+
 # ---------- Analysis Tab ----------
 with tab2:
     st.markdown("### 📊 Data Analysis")
