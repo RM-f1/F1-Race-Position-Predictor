@@ -141,19 +141,8 @@ with tab3:
     - 🏁 Predicts final race position using Machine Learning.
     - 📊 Analyze historical F1 data.
     - 🎨 Colorful & Clean Interface.
-    - 💻 Developed by **Ramandeep Kaur**.
     """)
-    st.markdown("<hr>", unsafe_allow_html=True)
-    st.markdown("### 🔧 Model Pipeline")
-    st.markdown("""
-    - **Input Features** ➝ Scaled
-    - Passed into a **Stacking Regressor** combining:
-        - Ridge
-        - Lasso
-        - Gradient Boosting
-        - XGBoost
-    - Final prediction = Weighted combination of all regressors.
-    """)
+   
 
     # st.image("assets/model_pipeline.png")
     st.markdown("<p style='text-align: center;'>Made with ❤️ by Ramandeep Kaur</p>", unsafe_allow_html=True)
