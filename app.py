@@ -137,7 +137,7 @@ if page == "Home":
         This project predicts the <span style='font-weight:600;'>Finishing Position</span> of Formula 1 drivers using historical race data.<br>
         Explore, visualize, and use real ML models to forecast racing results.<br>
         </p>
-        <img src="https://i.pinimg.com/originals/0a/9a/63/0a9a63f181fbd9a083c407e70f9e30f3.gif" style="width:100%; border-radius:20px; margin-top:16px;" />
+        <img src="https://www.google.com/imgres?q=f1%20images%20blue&imgurl=https%3A%2F%2Fcdn.sanity.io%2Fimages%2Ffnx611yr%2Fproduction%2F3ea25e10f56a8298477037ae8ec10e5724a855bd-4088x2299.jpg&imgrefurl=https%3A%2F%2Fwww.williamsf1.com%2Fposts%2Fcaeb28b6-d13f-4fc6-a17b-8014f6c854a3%2Fwilliams-racing-reveals-2024-formula-1-livery%3Fsrsltid%3DAfmBOorbYe00altsSwNyIZv5SBCWR5RytjYRQvvlfv7UzxPF0UQnbRm8&docid=WMYZ1-DIsiIS-M&tbnid=aUOnV6yh7iiNnM&vet=12ahUKEwjigpbBxKGQAxVvyjgGHfxwBiYQM3oECB4QAA..i&w=4088&h=2299&hcb=2&ved=2ahUKEwjigpbBxKGQAxVvyjgGHfxwBiYQM3oECB4QAA" style="width:100%; border-radius:20px; margin-top:16px;" />
     </div>
     """, unsafe_allow_html=True)
 
@@ -246,3 +246,4 @@ elif page == "About":
         </p>
     </div>
     """, unsafe_allow_html=True)
+
