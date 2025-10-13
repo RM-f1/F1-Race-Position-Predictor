@@ -9,72 +9,75 @@ import joblib
 st.set_page_config(
     page_title="F1 Race Position Predictor",
     page_icon="🏎️",
-    layout="wide",
-    initial_sidebar_state="collapsed"
+    layout="wide"
 )
 
 # ------------------------------
-# Custom CSS for full app styling
+# Custom CSS for Styling
 # ------------------------------
 st.markdown("""
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
-
+/* Background and font */
 body {
-    background-color: #D0F0FF;  /* light blue background */
+    background-color: #D0F0FF;
     font-family: 'Poppins', sans-serif;
     font-weight: 600;
-    color: #333333;
+    color: #333;
 }
 
-h1 {
-    text-align:center; 
-    font-size:50px; 
-    font-weight:bold;
-    background: linear-gradient(90deg, #FFB6C1, #FF69B4, #81D4FA, #4FC3F7);
-    -webkit-background-clip: text; 
-    -webkit-text-fill-color: transparent; 
-    margin-bottom:20px;
+/* Top Navigation Bar */
+.nav-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 30px;
 }
 
-h2, h3, h4, h5 {
+.nav-buttons button {
+    background: linear-gradient(135deg, #FFC1CC, #FFB6C1, #81D4FA, #B3E5FC);
+    color: #333;
+    font-weight: bold;
+    font-size: 16px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: none;
+    cursor: pointer;
+}
+
+.nav-buttons button:hover {
+    opacity: 0.85;
+}
+
+.active-tab {
+    border: 3px solid #FF69B4;
+}
+
+/* Headers */
+h1, h2, h3, h4 {
     font-weight: 700;
 }
 
+/* Buttons */
 .stButton>button {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 700;
+    border-radius: 12px;
+    background-color: #FF69B4;
+    color: white;
+    font-weight: bold;
 }
 
-.button-nav {
-    background: linear-gradient(90deg,#FFB6C1,#81D4FA); 
-    color:white !important;
-    font-weight:bold; 
-    border-radius:12px; 
-    height:50px; 
-    width:180px; 
-    margin:5px; 
-    font-size:18px; 
+/* Cards */
+.stCard {
+    background: linear-gradient(135deg, #FFC1CC, #FFB6C1, #81D4FA, #B3E5FC);
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 4px 4px 20px rgba(128, 128, 128, 0.3);
+    margin-bottom: 20px;
 }
-
-.card {
-    background: linear-gradient(135deg,#FFC1CC,#FFB6C1,#81D4FA,#B3E5FC); 
-    padding:20px;
-    border-radius:15px; 
-    box-shadow:4px 4px 20px rgba(128,128,128,0.3); 
-    margin-bottom:20px; 
-}
-
-.stDataFrame div[data-testid="stDataFrame"] {
-    font-family: 'Poppins', sans-serif;
-    font-weight: 600;
-}
-
 </style>
 """, unsafe_allow_html=True)
 
 # ------------------------------
-# Dataset Loader
+# Load Dataset Function
 # ------------------------------
 @st.cache_data
 def load_data(uploaded_file=None):
@@ -84,129 +87,137 @@ def load_data(uploaded_file=None):
                 df = pd.read_csv(uploaded_file)
             else:
                 df = pd.read_excel(uploaded_file)
-            df.to_csv("f1_cleaned_data.csv", index=False)
         else:
             df = pd.read_csv("f1_cleaned_data.csv")
         return df
     except Exception as e:
-        st.error(f"Error loading dataset: {e}")
-        return pd.DataFrame()
+        st.error(f"Error loading file: {e}")
+        return None
 
-uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv","xls","xlsx"])
+# ------------------------------
+# Top Navigation
+# ------------------------------
+st.markdown("<h1 style='text-align:center; color:#FF69B4'>F1 Race Position Predictor</h1>", unsafe_allow_html=True)
+
+tabs = ["Home", "Dataset", "Graphs & Plots", "Prediction", "About"]
+if 'active_tab' not in st.session_state:
+    st.session_state.active_tab = "Home"
+
+# Navigation buttons
+cols = st.columns(len(tabs))
+for i, tab in enumerate(tabs):
+    button_class = "active-tab" if st.session_state.active_tab == tab else ""
+    if cols[i].button(tab, key=tab):
+        st.session_state.active_tab = tab
+
+# ------------------------------
+# Upload File Section
+# ------------------------------
+uploaded_file = st.file_uploader("Upload CSV/XLS/XLSX File", type=["csv", "xls", "xlsx"])
 df = load_data(uploaded_file)
-
-# ------------------------------
-# Session state for tab selection
-# ------------------------------
-if "tab" not in st.session_state:
-    st.session_state.tab = "Home"
-
-# ------------------------------
-# Top Navigation Buttons
-# ------------------------------
-st.markdown('<h1>F1 Race Position Predictor</h1>', unsafe_allow_html=True)
-cols = st.columns(5)
-tab_names = ["Home","Dataset","Graphs & Plots","Prediction","About"]
-
-for i, name in enumerate(tab_names):
-    if cols[i].button(name, key=name, help=f"Go to {name}"):
-        st.session_state.tab = name
-
-selected_tab = st.session_state.tab
 
 # ------------------------------
 # HOME PAGE
 # ------------------------------
-if selected_tab == "Home":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+if st.session_state.active_tab == "Home":
+    st.subheader("Welcome to the F1 Race Position Predictor App!")
     st.markdown("""
-    <h2>Welcome to the F1 Race Position Predictor App!</h2>
-    <p>Explore the dataset, visualize race statistics, and try out predictions!</p>
-    """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    **College:** Guru Nanak Dev Engineering College  
+    **About F1:** Formula 1 is the highest class of single-seater auto racing sanctioned by the FIA.  
+    Explore the dataset, visualize statistics, and predict race positions!
+    """)
 
 # ------------------------------
 # DATASET PAGE
 # ------------------------------
-elif selected_tab == "Dataset":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📊 Explore Dataset")
-    if df.empty:
-        st.warning("No dataset loaded. Please upload a file.")
-    else:
-        st.dataframe(df)
+elif st.session_state.active_tab == "Dataset":
+    if df is not None:
+        st.subheader("📊 Explore Dataset")
+        st.dataframe(df.head())
         st.markdown("### Dataset Summary")
         st.write(df.describe())
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown("### Filter Data")
+        if 'year' in df.columns and 'Constructor' in df.columns:
+            year = st.selectbox("Select Year", options=df['year'].unique())
+            constructor = st.selectbox("Select Constructor", options=df['Constructor'].unique())
+            filtered_df = df[(df['year']==year) & (df['Constructor']==constructor)]
+            st.dataframe(filtered_df)
+    else:
+        st.warning("Upload a dataset to explore it.")
 
 # ------------------------------
 # GRAPHS & PLOTS PAGE
 # ------------------------------
-elif selected_tab == "Graphs & Plots":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
-    st.subheader("📈 Graphs & Visualizations")
-    if df.empty:
-        st.warning("No dataset loaded. Please upload a file.")
-    else:
-        tab1, tab2, tab3 = st.tabs(["Scatter Plot","Histogram","Bar Chart"])
+elif st.session_state.active_tab == "Graphs & Plots":
+    if df is not None:
+        st.subheader("📈 Graphs & Visualizations")
+        tab1, tab2, tab3 = st.tabs(["Scatter Plot", "Histogram", "Bar Chart"])
+        
         with tab1:
             scatter = alt.Chart(df).mark_circle(size=60).encode(
-                x='QualifyingPosition', y='FinishingPosition',
-                color='Constructor', tooltip=['Driver','Constructor','FinishingPosition']
+                x='QualifyingPosition',
+                y='FinishingPosition',
+                color='Constructor',
+                tooltip=['Driver', 'Constructor', 'FinishingPosition']
             ).interactive()
             st.altair_chart(scatter, use_container_width=True)
+        
         with tab2:
             hist = alt.Chart(df).mark_bar().encode(
-                x='points', y='count()', tooltip=['count()']
+                x='points',
+                y='count()',
+                tooltip=['count()']
             )
             st.altair_chart(hist, use_container_width=True)
+        
         with tab3:
             bar = alt.Chart(df).mark_bar().encode(
-                x='Constructor', y='points', color='Constructor', tooltip=['points']
+                x='Constructor',
+                y='points',
+                color='Constructor',
+                tooltip=['points']
             )
             st.altair_chart(bar, use_container_width=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.warning("Upload a dataset to see visualizations.")
 
 # ------------------------------
 # PREDICTION PAGE
 # ------------------------------
-elif selected_tab == "Prediction":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+elif st.session_state.active_tab == "Prediction":
     st.subheader("⚡ Make a Prediction")
-    if df.empty:
-        st.warning("No dataset loaded. Please upload a file.")
-    else:
-        year = st.number_input("Year", 1950, 2025, 2025)
-        round_race = st.number_input("Race Round", 1, 25, 1)
-        qualifying = st.number_input("Qualifying Position", 1, 30, 1)
-        points = st.number_input("Driver Points", 0, 500, 0)
-        laps = st.number_input("Laps Completed", 0, 1000, 0)
-        milliseconds = st.number_input("Milliseconds", 0, 5000000, 0)
-        driver = st.number_input("Driver Encoded", 0)
-        constructor = st.number_input("Constructor Encoded", 0)
-        grandprix = st.number_input("GrandPrix Encoded", 0)
+    if df is not None:
+        year = st.number_input("Year", min_value=1950, max_value=2025, value=2025)
+        round_race = st.number_input("Race Round", min_value=1, max_value=25, value=1)
+        qualifying = st.number_input("Qualifying Position", min_value=1, max_value=30, value=1)
+        points = st.number_input("Driver Points", min_value=0, max_value=500, value=0)
+        laps = st.number_input("Laps Completed", min_value=0, max_value=1000, value=0)
+        milliseconds = st.number_input("Milliseconds", min_value=0, max_value=5000000, value=0)
+        driver = st.text_input("Driver Encoded (number)")
+        constructor = st.text_input("Constructor Encoded (number)")
+        grandprix = st.text_input("GrandPrix Encoded (number)")
         
         if st.button("Predict"):
             try:
                 rf_model = joblib.load("rf_model.pkl")
-                input_features = [[year, round_race, qualifying, points, laps, milliseconds, driver, constructor, grandprix, 0]]
+                input_features = [[year, round_race, qualifying, points, laps, milliseconds,
+                                   int(driver), int(constructor), int(grandprix), 0]]  # adjust order
                 prediction = rf_model.predict(input_features)[0]
                 st.success(f"🏁 Predicted Finishing Position: {prediction}")
             except Exception as e:
                 st.error(f"Prediction Error: {e}")
-    st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.warning("Upload a dataset to make predictions.")
 
 # ------------------------------
 # ABOUT PAGE
 # ------------------------------
-elif selected_tab == "About":
-    st.markdown('<div class="card">', unsafe_allow_html=True)
+elif st.session_state.active_tab == "About":
     st.subheader("ℹ️ About This Project")
     st.markdown("""
     **Project Name:** F1 Race Position Predictor  
     **College:** Guru Nanak Dev Engineering College  
-    **Description:** Predicts F1 race finishing positions using historical data.  
     **Developer:** Ramandeep Kaur  
-    **GitHub:** [Link](https://github.com/RM-f1/F1-Race-Position-Predictor)
+    **GitHub:** [https://github.com/RM-f1/F1-Race-Position-Predictor](https://github.com/RM-f1/F1-Race-Position-Predictor)  
+    Learn more about Formula 1 and explore the dataset with interactive charts.
     """)
-    st.markdown('</div>', unsafe_allow_html=True)
