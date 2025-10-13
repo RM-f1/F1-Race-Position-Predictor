@@ -1,6 +1,5 @@
-streamlit==1.26.0
-numpy>=1.26.0
-pandas>=2.1.0
-scikit-learn>=1.3.0
-matplotlib==3.8.0
-
+streamlit==1.26.0          # okay
+numpy>=1.26.0              # use 1.26+ instead of 1.25
+pandas>=2.1.0              # okay
+scikit-learn>=1.3.0        # okay
+matplotlib>=3.8.0          # remove strict ==3.8.0
