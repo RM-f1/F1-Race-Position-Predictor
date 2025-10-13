@@ -1,75 +1,168 @@
 import streamlit as st
-import numpy as np
-import pickle
+import pandas as pd
+import altair as alt
 
-# -----------------------------
-# Load model and encoders
-# -----------------------------
-with open('rf_model.pkl', 'rb') as f:
-    rf_model = pickle.load(f)
-
-with open('le_driver.pkl', 'rb') as f:
-    le_driver = pickle.load(f)
-
-with open('le_team.pkl', 'rb') as f:
-    le_team = pickle.load(f)
-
-with open('le_gp.pkl', 'rb') as f:
-    le_gp = pickle.load(f)
-
-# -----------------------------
-# Page config & theme
-# -----------------------------
+# ------------------------------
+# Page Config
+# ------------------------------
 st.set_page_config(
-    page_title="F1 Finishing Position Predictor",
+    page_title="F1 Race Position Predictor",
     page_icon="🏎️",
-    layout="centered"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
-# Dark-light theme CSS
-st.markdown(
-    """
-    <style>
-    body { background-color: #121212; color: #E0E0E0; }
-    .stButton>button { background-color: #6200EE; color: white; }
-    .stSelectbox>div, .stNumberInput>div { background-color: #1E1E1E; color: #E0E0E0; }
-    </style>
-    """,
-    unsafe_allow_html=True
-)
+# ------------------------------
+# Custom CSS
+# ------------------------------
+st.markdown("""
+<style>
+body {
+    background-color: #FDF6F0;
+    color: #333333;
+}
+.stButton>button {
+    background-color: #FFB347;
+    color: white;
+    font-weight: bold;
+}
+h1, h2, h3, h4, h5 {
+    color: #333333;
+}
+.stSidebar {
+    background-color: #FFF0F5;
+}
+</style>
+""", unsafe_allow_html=True)
 
-# -----------------------------
-# Title
-# -----------------------------
-st.title("🏎️ F1 Finishing Position Predictor")
-st.write("Predict the finishing position of drivers based on race details.")
+# ------------------------------
+# Sidebar Navigation
+# ------------------------------
+st.sidebar.title("🏎️ F1 Race Predictor")
+page = st.sidebar.radio("Navigation", ["Home", "Dataset", "Graphs & Plots", "Prediction", "About"])
 
-# -----------------------------
-# Input fields
-# -----------------------------
+# ------------------------------
+# Load Dataset
+# ------------------------------
+@st.cache_data
+def load_data():
+    df = pd.read_csv("f1_cleaned_data.csv")
+    return df
 
-# Numerical inputs
-raceId = st.number_input("Race ID", min_value=1, step=1)
-year = st.number_input("Year", min_value=1950, max_value=2100, step=1)
-round_num = st.number_input("Round", min_value=1, step=1)
-qualifying_position = st.number_input("Qualifying Position", min_value=1, step=1)
-points = st.number_input("Driver Points", min_value=0, step=1)
-laps = st.number_input("Number of Laps Completed", min_value=1, step=1)
-milliseconds = st.number_input("Total Time in milliseconds", min_value=0, step=1)
+df = load_data()
 
-# Encoded categorical inputs
-Driver_encoded = st.number_input("Driver (encoded)", min_value=0, step=1)
-Constructor_encoded = st.number_input("Constructor (encoded)", min_value=0, step=1)
-GrandPrix_encoded = st.number_input("Grand Prix (encoded)", min_value=0, step=1)
-
-# Predict button
-if st.button("Predict"):
-    # Create input array in the correct order
-    input_features = np.array([[
-        raceId, year, round_num, qualifying_position, points, laps, milliseconds,
-        Driver_encoded, Constructor_encoded, GrandPrix_encoded
-    ]])
+# ------------------------------
+# HOME PAGE
+# ------------------------------
+if page == "Home":
+    st.title("🏎️ F1 Race Position Predictor")
+    st.subheader("Guru Nanak Dev Engineering College | Formula 1 Race Analytics")
     
-    # Make prediction
-    prediction = rf_model.predict(input_features)[0]
-    st.success(f"Predicted Finishing Position: {prediction}")
+    col1, col2 = st.columns([2,1])
+    with col1:
+        st.markdown("""
+        Welcome to the **F1 Race Position Predictor App**!  
+        This project predicts the **Finishing Position** of a driver in a Formula 1 race based on historical data.  
+        
+        Learn about F1, explore the dataset, visualize statistics, and try the predictor!
+        """)
+  
+
+# ------------------------------
+# DATASET PAGE
+# ------------------------------
+elif page == "Dataset":
+    st.title("📊 Explore Dataset")
+    st.dataframe(df)
+    
+    st.markdown("### Dataset Summary")
+    st.write(df.describe())
+    
+    st.markdown("### Filter Data")
+    year = st.selectbox("Select Year", options=df['year'].unique())
+    constructor = st.selectbox("Select Constructor", options=df['Constructor'].unique())
+    filtered_df = df[(df['year']==year) & (df['Constructor']==constructor)]
+    st.dataframe(filtered_df)
+
+# ------------------------------
+# GRAPHS & PLOTS PAGE
+# ------------------------------
+elif page == "Graphs & Plots":
+    st.title("📈 Graphs & Visualizations")
+    
+    tab1, tab2, tab3 = st.tabs(["Scatter Plot", "Histogram", "Bar Chart"])
+    
+    with tab1:
+        st.subheader("Qualifying vs Finishing Position")
+        scatter = alt.Chart(df).mark_circle(size=60).encode(
+            x='QualifyingPosition',
+            y='FinishingPosition',
+            color='Constructor',
+            tooltip=['Driver', 'Constructor', 'FinishingPosition']
+        ).interactive()
+        st.altair_chart(scatter, use_container_width=True)
+    
+    with tab2:
+        st.subheader("Points Distribution")
+        hist = alt.Chart(df).mark_bar().encode(
+            x='points',
+            y='count()',
+            tooltip=['count()']
+        )
+        st.altair_chart(hist, use_container_width=True)
+    
+    with tab3:
+        st.subheader("Top Constructors by Points")
+        bar = alt.Chart(df).mark_bar().encode(
+            x='Constructor',
+            y='points',
+            color='Constructor',
+            tooltip=['points']
+        )
+        st.altair_chart(bar, use_container_width=True)
+
+# ------------------------------
+# PREDICTION PAGE
+# ------------------------------
+elif page == "Prediction":
+    st.title("⚡ Make a Prediction")
+    st.markdown("Enter the details below to predict the finishing position:")
+    
+    # Input fields
+    year = st.number_input("Year", min_value=1950, max_value=2025, value=2025)
+    round_race = st.number_input("Race Round", min_value=1, max_value=25, value=1)
+    qualifying = st.number_input("Qualifying Position", min_value=1, max_value=30, value=1)
+    points = st.number_input("Driver Points", min_value=0, max_value=500, value=0)
+    laps = st.number_input("Laps Completed", min_value=0, max_value=1000, value=0)
+    milliseconds = st.number_input("Milliseconds", min_value=0, max_value=5000000, value=0)
+    driver = st.text_input("Driver Encoded (number)")
+    constructor = st.text_input("Constructor Encoded (number)")
+    grandprix = st.text_input("GrandPrix Encoded (number)")
+    
+    if st.button("Predict"):
+        # Example placeholder; replace with your trained model
+        try:
+            import joblib
+            rf_model = joblib.load("rf_model.pkl")
+            input_features = [[year, round_race, qualifying, points, laps, milliseconds,
+                               int(driver), int(constructor), int(grandprix), 0]]  # adjust order
+            prediction = rf_model.predict(input_features)[0]
+            st.success(f"🏁 Predicted Finishing Position: {prediction}")
+        except Exception as e:
+            st.error(f"Prediction Error: {e}")
+
+# ------------------------------
+# ABOUT PAGE
+# ------------------------------
+elif page == "About":
+    st.title("ℹ️ About This Project")
+    st.markdown("""
+    **Project Name:** F1 Race Position Predictor  
+    **College:**Guru Nanak Dev Engineering College  
+    **Description:** This app predicts F1 race finishing positions using historical race data.  
+    **Developer:**Ramandeep Kaur 
+    **GitHub:** [https://github.com/RM-f1/F1-Race-Position-Predictor/edit/main/app.py)
+    
+    Learn more about Formula 1 and explore the dataset with interactive charts.
+    """)
+    
