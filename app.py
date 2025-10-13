@@ -47,26 +47,29 @@ st.write("Predict the finishing position of drivers based on race details.")
 # -----------------------------
 # Input fields
 # -----------------------------
-qual_pos = st.number_input("Qualifying Position", 1, 30, 10)
-laps = st.number_input("Number of Laps", 1, 100, 58)
-points = st.number_input("Points Before Race", 0, 100, 0)
-milliseconds = st.number_input("Qualifying Time (ms)", 0, 200000, 90000)
 
-driver = st.selectbox("Driver", le_driver.classes_)
-constructor = st.selectbox("Constructor", le_team.classes_)
-grandprix = st.selectbox("Grand Prix", le_gp.classes_)
+# Numerical inputs
+raceId = st.number_input("Race ID", min_value=1, step=1)
+year = st.number_input("Year", min_value=1950, max_value=2100, step=1)
+round_num = st.number_input("Round", min_value=1, step=1)
+qualifying_position = st.number_input("Qualifying Position", min_value=1, step=1)
+points = st.number_input("Driver Points", min_value=0, step=1)
+laps = st.number_input("Number of Laps Completed", min_value=1, step=1)
+milliseconds = st.number_input("Total Time in milliseconds", min_value=0, step=1)
 
-# -----------------------------
+# Encoded categorical inputs
+Driver_encoded = st.number_input("Driver (encoded)", min_value=0, step=1)
+Constructor_encoded = st.number_input("Constructor (encoded)", min_value=0, step=1)
+GrandPrix_encoded = st.number_input("Grand Prix (encoded)", min_value=0, step=1)
+
 # Predict button
-# -----------------------------
-if st.button("Predict Finishing Position"):
-    driver_enc = le_driver.transform([driver])[0]
-    constructor_enc = le_team.transform([constructor])[0]
-    grandprix_enc = le_gp.transform([grandprix])[0]
-
-    input_features = np.array([[qual_pos, laps, points, milliseconds,
-                                driver_enc, constructor_enc, grandprix_enc]])
-
+if st.button("Predict"):
+    # Create input array in the correct order
+    input_features = np.array([[
+        raceId, year, round_num, qualifying_position, points, laps, milliseconds,
+        Driver_encoded, Constructor_encoded, GrandPrix_encoded
+    ]])
+    
+    # Make prediction
     prediction = rf_model.predict(input_features)[0]
-
-    st.success(f"Predicted Finishing Position: {prediction:.2f}")
+    st.success(f"Predicted Finishing Position: {prediction}")
