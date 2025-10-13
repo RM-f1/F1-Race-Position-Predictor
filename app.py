@@ -19,7 +19,7 @@ st.markdown("""
 /* Background and Font */
 body {
     background-color: #E3F2FD; /* Light blue */
-    color: #0D47A1; /* Deep blue font */
+    color: #0D47A1;
     font-family: 'Poppins', sans-serif;
 }
 
@@ -36,42 +36,52 @@ p, label, span, div {
 /* Title Section */
 .main-title {
     text-align: center;
-    font-size: 40px;
+    font-size: 42px;
     font-weight: 800;
-    color: #1565C0;
-    padding: 15px;
+    color: #0D47A1;
     margin-bottom: 10px;
 }
 
-/* Button Container */
+/* Navbar Buttons */
 .navbar {
     text-align: center;
-    margin-bottom: 30px;
+    margin-bottom: 25px;
 }
 
-/* Navigation Buttons */
 .nav-button {
-    background-color: #64B5F6;
-    border: none;
+    background-color: #1976D2; /* solid blue */
+    border: none !important;
+    outline: none !important;
     color: white;
-    padding: 10px 20px;
-    margin: 5px;
+    padding: 12px 25px;
+    margin: 6px;
     border-radius: 30px;
     font-size: 18px;
     cursor: pointer;
     font-weight: 600;
-    transition: 0.3s;
+    transition: 0.3s ease-in-out;
+    box-shadow: 0px 4px 10px rgba(25, 118, 210, 0.3);
 }
 
+/* Hover Effect */
 .nav-button:hover {
-    background-color: #1976D2;
-    transform: scale(1.05);
+    background-color: #42A5F5;
+    transform: translateY(-2px);
+    box-shadow: 0px 6px 15px rgba(25, 118, 210, 0.4);
 }
 
 /* Active Button */
 .active {
     background-color: #0D47A1 !important;
-    color: #FFFFFF !important;
+    color: white !important;
+    box-shadow: 0px 6px 15px rgba(13, 71, 161, 0.5);
+}
+
+/* Remove red border and focus highlight */
+button:focus, button:active, .nav-button:focus {
+    outline: none !important;
+    box-shadow: none !important;
+    border: none !important;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -86,16 +96,13 @@ st.markdown("<h1 class='main-title'>🏎️ F1 Race Position Predictor</h1>", un
 # ------------------------------
 pages = ["Home", "Dataset", "Graphs & Plots", "Prediction", "About"]
 
-# Create 5 columns for navigation buttons
 cols = st.columns(len(pages))
-page = None
+page = st.session_state.get("page", "Home")
+
 for i, name in enumerate(pages):
     if cols[i].button(name):
         page = name
-
-# Default page if none clicked yet
-if page is None:
-    page = "Home"
+        st.session_state.page = name
 
 # ------------------------------
 # File Upload
@@ -217,5 +224,3 @@ elif page == "About":
     A data science project that uses historical Formula 1 data to predict race finishing positions.  
     Explore, visualize, and predict with style!  
     """)
-
-
