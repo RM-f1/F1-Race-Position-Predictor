@@ -44,10 +44,24 @@ page = st.sidebar.radio("Navigation", ["Home", "Dataset", "Graphs & Plots", "Pre
 # ------------------------------
 # Load Dataset
 # ------------------------------
-@st.cache_data
-def load_data():
-    df = pd.read_csv("f1_cleaned_data.csv")
-    return df
+
+uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xls", "xlsx"])
+
+if uploaded_file is not None:
+    try:
+        if uploaded_file.name.endswith(".csv") or uploaded_file.name.endswith(".xsl"):
+            df = pd.read_csv(uploaded_file)
+        else:
+            df = pd.read_excel(uploaded_file)
+        
+        st.success("File uploaded successfully!")
+        st.dataframe(df.head())
+        
+        # Optional: Save as CSV for consistency
+        df.to_csv("f1_cleaned_data.csv", index=False)
+        
+    except Exception as e:
+        st.error(f"Error loading file: {e}")
 
 df = load_data()
 
@@ -166,3 +180,4 @@ elif page == "About":
     Learn more about Formula 1 and explore the dataset with interactive charts.
     """)
     
+
