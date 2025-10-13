@@ -14,66 +14,67 @@ st.set_page_config(
 )
 
 # ------------------------------
-# Custom CSS for theme
+# Custom CSS for full app styling
 # ------------------------------
 st.markdown("""
 <style>
-/* Page background */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&display=swap');
+
 body {
-    background-color: #E0F7FA;  /* light blue */
-    color: #333333;
+    background-color: #D0F0FF;  /* light blue background */
     font-family: 'Poppins', sans-serif;
+    font-weight: 600;
+    color: #333333;
 }
 
-/* Main project title */
 h1 {
-    text-align: center;
-    font-size: 50px;
-    font-weight: bold;
+    text-align:center; 
+    font-size:50px; 
+    font-weight:bold;
     background: linear-gradient(90deg, #FFB6C1, #FF69B4, #81D4FA, #4FC3F7);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 20px;
+    -webkit-background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    margin-bottom:20px;
 }
 
-/* Navigation buttons */
-.nav-button {
-    background: linear-gradient(90deg, #FFB6C1, #81D4FA);
-    color: white !important;
-    font-weight: bold;
-    border-radius: 12px;
-    height: 50px;
-    width: 180px;
-    margin: 5px;
-    font-size: 18px;
+h2, h3, h4, h5 {
+    font-weight: 700;
 }
 
-/* Cards for sections */
+.stButton>button {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+}
+
+.button-nav {
+    background: linear-gradient(90deg,#FFB6C1,#81D4FA); 
+    color:white !important;
+    font-weight:bold; 
+    border-radius:12px; 
+    height:50px; 
+    width:180px; 
+    margin:5px; 
+    font-size:18px; 
+}
+
 .card {
-    background: linear-gradient(135deg, #FFC1CC, #FFB6C1, #81D4FA, #B3E5FC);
-    padding: 20px;
-    border-radius: 15px;
-    box-shadow: 4px 4px 20px rgba(128,128,128,0.3);
-    margin-bottom: 20px;
+    background: linear-gradient(135deg,#FFC1CC,#FFB6C1,#81D4FA,#B3E5FC); 
+    padding:20px;
+    border-radius:15px; 
+    box-shadow:4px 4px 20px rgba(128,128,128,0.3); 
+    margin-bottom:20px; 
 }
 
-/* Dataframe styling */
-[data-testid="stDataFrame"] {
-    border-radius: 12px;
-    overflow: hidden;
-    border: 2px solid #0288D1;
+.stDataFrame div[data-testid="stDataFrame"] {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 600;
 }
 
-/* Input labels */
-label {
-    font-weight: bold;
-    font-size: 16px;
-}
 </style>
 """, unsafe_allow_html=True)
 
 # ------------------------------
-# Load Dataset
+# Dataset Loader
 # ------------------------------
 @st.cache_data
 def load_data(uploaded_file=None):
@@ -91,16 +92,27 @@ def load_data(uploaded_file=None):
         st.error(f"Error loading dataset: {e}")
         return pd.DataFrame()
 
-uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv", "xls", "xlsx"])
+uploaded_file = st.file_uploader("Upload your CSV or Excel file", type=["csv","xls","xlsx"])
 df = load_data(uploaded_file)
 
 # ------------------------------
-# Navigation buttons
+# Session state for tab selection
+# ------------------------------
+if "tab" not in st.session_state:
+    st.session_state.tab = "Home"
+
+# ------------------------------
+# Top Navigation Buttons
 # ------------------------------
 st.markdown('<h1>F1 Race Position Predictor</h1>', unsafe_allow_html=True)
+cols = st.columns(5)
+tab_names = ["Home","Dataset","Graphs & Plots","Prediction","About"]
 
-tabs = ["Home", "Dataset", "Graphs & Plots", "Prediction", "About"]
-selected_tab = st.radio("", tabs, horizontal=True, index=0, label_visibility="collapsed")
+for i, name in enumerate(tab_names):
+    if cols[i].button(name, key=name, help=f"Go to {name}"):
+        st.session_state.tab = name
+
+selected_tab = st.session_state.tab
 
 # ------------------------------
 # HOME PAGE
@@ -109,7 +121,6 @@ if selected_tab == "Home":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.markdown("""
     <h2>Welcome to the F1 Race Position Predictor App!</h2>
-    <p>This project predicts the finishing positions of Formula 1 drivers using historical race data.</p>
     <p>Explore the dataset, visualize race statistics, and try out predictions!</p>
     """, unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -126,13 +137,6 @@ elif selected_tab == "Dataset":
         st.dataframe(df)
         st.markdown("### Dataset Summary")
         st.write(df.describe())
-        
-        st.markdown("### Filter Data")
-        if 'year' in df.columns and 'Constructor' in df.columns:
-            year = st.selectbox("Select Year", options=df['year'].unique())
-            constructor = st.selectbox("Select Constructor", options=df['Constructor'].unique())
-            filtered_df = df[(df['year']==year) & (df['Constructor']==constructor)]
-            st.dataframe(filtered_df)
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------------------
@@ -141,38 +145,24 @@ elif selected_tab == "Dataset":
 elif selected_tab == "Graphs & Plots":
     st.markdown('<div class="card">', unsafe_allow_html=True)
     st.subheader("📈 Graphs & Visualizations")
-    
     if df.empty:
         st.warning("No dataset loaded. Please upload a file.")
     else:
-        tab1, tab2, tab3 = st.tabs(["Scatter Plot", "Histogram", "Bar Chart"])
-        
+        tab1, tab2, tab3 = st.tabs(["Scatter Plot","Histogram","Bar Chart"])
         with tab1:
-            st.subheader("Qualifying vs Finishing Position")
             scatter = alt.Chart(df).mark_circle(size=60).encode(
-                x='QualifyingPosition',
-                y='FinishingPosition',
-                color='Constructor',
-                tooltip=['Driver', 'Constructor', 'FinishingPosition']
+                x='QualifyingPosition', y='FinishingPosition',
+                color='Constructor', tooltip=['Driver','Constructor','FinishingPosition']
             ).interactive()
             st.altair_chart(scatter, use_container_width=True)
-        
         with tab2:
-            st.subheader("Points Distribution")
             hist = alt.Chart(df).mark_bar().encode(
-                x='points',
-                y='count()',
-                tooltip=['count()']
+                x='points', y='count()', tooltip=['count()']
             )
             st.altair_chart(hist, use_container_width=True)
-        
         with tab3:
-            st.subheader("Top Constructors by Points")
             bar = alt.Chart(df).mark_bar().encode(
-                x='Constructor',
-                y='points',
-                color='Constructor',
-                tooltip=['points']
+                x='Constructor', y='points', color='Constructor', tooltip=['points']
             )
             st.altair_chart(bar, use_container_width=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -186,21 +176,20 @@ elif selected_tab == "Prediction":
     if df.empty:
         st.warning("No dataset loaded. Please upload a file.")
     else:
-        year = st.number_input("Year", min_value=1950, max_value=2025, value=2025)
-        round_race = st.number_input("Race Round", min_value=1, max_value=25, value=1)
-        qualifying = st.number_input("Qualifying Position", min_value=1, max_value=30, value=1)
-        points = st.number_input("Driver Points", min_value=0, max_value=500, value=0)
-        laps = st.number_input("Laps Completed", min_value=0, max_value=1000, value=0)
-        milliseconds = st.number_input("Milliseconds", min_value=0, max_value=5000000, value=0)
-        driver = st.number_input("Driver Encoded (number)", min_value=0, value=0)
-        constructor = st.number_input("Constructor Encoded (number)", min_value=0, value=0)
-        grandprix = st.number_input("GrandPrix Encoded (number)", min_value=0, value=0)
+        year = st.number_input("Year", 1950, 2025, 2025)
+        round_race = st.number_input("Race Round", 1, 25, 1)
+        qualifying = st.number_input("Qualifying Position", 1, 30, 1)
+        points = st.number_input("Driver Points", 0, 500, 0)
+        laps = st.number_input("Laps Completed", 0, 1000, 0)
+        milliseconds = st.number_input("Milliseconds", 0, 5000000, 0)
+        driver = st.number_input("Driver Encoded", 0)
+        constructor = st.number_input("Constructor Encoded", 0)
+        grandprix = st.number_input("GrandPrix Encoded", 0)
         
         if st.button("Predict"):
             try:
                 rf_model = joblib.load("rf_model.pkl")
-                input_features = [[year, round_race, qualifying, points, laps, milliseconds,
-                                   driver, constructor, grandprix, 0]]
+                input_features = [[year, round_race, qualifying, points, laps, milliseconds, driver, constructor, grandprix, 0]]
                 prediction = rf_model.predict(input_features)[0]
                 st.success(f"🏁 Predicted Finishing Position: {prediction}")
             except Exception as e:
@@ -216,7 +205,7 @@ elif selected_tab == "About":
     st.markdown("""
     **Project Name:** F1 Race Position Predictor  
     **College:** Guru Nanak Dev Engineering College  
-    **Description:** Predicts F1 race finishing positions using historical race data.  
+    **Description:** Predicts F1 race finishing positions using historical data.  
     **Developer:** Ramandeep Kaur  
     **GitHub:** [Link](https://github.com/RM-f1/F1-Race-Position-Predictor)
     """)
